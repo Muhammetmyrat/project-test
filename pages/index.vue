@@ -1,11 +1,15 @@
 <script setup lang="ts">
   const { $VuePdfEmbed: VuePdfEmbed } = useNuxtApp()
   import MyButton from '@/components/base/MyButton.vue'
+  import TextField from '@/components/base/TextField.vue'
 
   //   const pdfSource = computed(() => {
   //     return new URL(`../assets/files/1 page document example.pdf`, import.meta.url).href
   //   })
+
+  const info = ref<string>('')
   const pdfSource = ref<string | null>('')
+
   const changeFile = (event: Event): void => {
     const target = event.target as HTMLInputElement
     if (target.files) {
@@ -25,6 +29,12 @@
         <input class="upload-pdf__action-file" type="file" accept=".pdf" name="file" @change="changeFile" />
       </div>
       <div class="upload-pdf__pdf" v-if="pdfSource">
+        <div class="upload-pdf__textarea">
+          <div class="upload-pdf__input">
+            <TextField v-model="info" />
+          </div>
+          <MyButton title="save" hover />
+        </div>
         <ClientOnly>
           <VuePdfEmbed annotation-layer text-layer :source="pdfSource" />
         </ClientOnly>
@@ -80,6 +90,16 @@
           }
         }
       }
+    }
+    &__textarea {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 40px;
+      margin-bottom: 30px;
+    }
+    &__input {
+      width: 50%;
     }
   }
 </style>
