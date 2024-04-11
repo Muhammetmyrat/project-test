@@ -2,6 +2,7 @@
 
 <template>
   <div>
+    <TheHeader />
     <div class="__container">
       <slot />
     </div>
