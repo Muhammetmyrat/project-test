@@ -1,7 +1,6 @@
 <script setup>
   import { computed } from 'vue'
   import Icon from './icon/Icon.vue'
-  import Avatar from '@/components/base/Avatar.vue'
 
   const props = defineProps({
     title: { type: String, default: null },
@@ -85,7 +84,6 @@
 
 <template>
   <button :class="classes" :disabled="props.disabled" :type="type" :style="styles">
-    <avatar v-if="props.avatar" :name="user.fullName ? user.fullName : user.userName" :image="user.avatar"></avatar>
     <span v-if="props.prevIcon && !props.avatar" class="button__icon-left">
       <Icon
         :name="props.prevIcon"

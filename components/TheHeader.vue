@@ -74,6 +74,7 @@
               font-weight: 400;
               line-height: normal;
               color: var(--on-3);
+              &:hover,
               &.router-link-active,
               &.router-link-exact-active {
                 color: var(--bg-inverted);
