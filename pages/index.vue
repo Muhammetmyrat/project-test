@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  const { $VuePdfEmbed: VuePdfEmbed } = useNuxtApp()
+  const { $VuePdfEmbed: VuePdfEmbed, $VueDraggableResizable: VueDraggableResizable } = useNuxtApp()
   import MyButton from '@/components/base/MyButton.vue'
   import TextField from '@/components/base/TextField.vue'
 
@@ -9,6 +9,13 @@
 
   const info = ref<string>('')
   const pdfSource = ref<string | null>('')
+  const resizable = reactive({
+    x: 100,
+    y: 100,
+    h: 100,
+    w: 100,
+    active: false,
+  })
 
   const changeFile = (event: Event): void => {
     const target = event.target as HTMLInputElement
@@ -19,6 +26,10 @@
       }
     }
   }
+
+  const print = (val) => {
+    console.log(val)
+  }
 </script>
 
 <template>
@@ -28,16 +39,41 @@
         <MyButton title="Upload PDF" active />
         <input class="upload-pdf__action-file" type="file" accept=".pdf" name="file" @change="changeFile" />
       </div>
-      <div class="upload-pdf__pdf" v-if="pdfSource">
+      <div class="upload-pdf__body" v-if="pdfSource">
         <div class="upload-pdf__textarea">
           <div class="upload-pdf__input">
             <TextField v-model="info" />
           </div>
           <MyButton title="save" hover />
         </div>
-        <ClientOnly>
-          <VuePdfEmbed annotation-layer text-layer :source="pdfSource" />
-        </ClientOnly>
+        <div class="upload-pdf__pdf">
+          <div class="upload-pdf__pdf-vdr">
+            <VueDraggableResizable
+              :initW="110"
+              :initH="120"
+              v-model:x="resizable.x"
+              v-model:y="resizable.y"
+              v-model:w="resizable.w"
+              v-model:h="resizable.h"
+              v-model:active="resizable.active"
+              :draggable="true"
+              :resizable="true"
+              @activated="print('activated')"
+              @deactivated="print('deactivated')"
+              @drag-start="print('drag-start')"
+              @resize-start="print('resize-start')"
+              @dragging="print('dragging')"
+              @resizing="print('resizing')"
+              @drag-end="print('drag-end')"
+              @resize-end="print('resize-end')"
+            >
+              This is a test example
+            </VueDraggableResizable>
+          </div>
+          <ClientOnly>
+            <VuePdfEmbed annotation-layer text-layer :source="pdfSource" />
+          </ClientOnly>
+        </div>
       </div>
     </div>
   </div>
@@ -70,9 +106,23 @@
         cursor: pointer;
       }
     }
+    &__body {
+      width: 100%;
+      height: 100%;
+    }
     &__pdf {
       width: 100%;
       height: 100%;
+      position: relative;
+      &-vdr {
+        width: 200px;
+        height: 200px;
+        position: absolute;
+        top: 0px;
+        left: 0px;
+        border: 1px solid #000;
+        user-select: none;
+      }
       &:deep() {
         .vue-pdf-embed {
           margin: 0 auto;
