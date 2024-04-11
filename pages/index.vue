@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  const { $VuePdfEmbed: VuePdfEmbed, $VueDraggableResizable: VueDraggableResizable } = useNuxtApp()
+  const { $VuePdfEmbed: VuePdfEmbed, $VueDraggableResizable: VueDraggableResizable, $DraggableContainer: DraggableContainer } = useNuxtApp()
   import MyButton from '@/components/base/MyButton.vue'
   import TextField from '@/components/base/TextField.vue'
 
@@ -10,11 +10,10 @@
   const info = ref<string>('')
   const pdfSource = ref<string | null>('')
   const resizable = reactive({
-    x: 100,
-    y: 100,
-    h: 100,
-    w: 100,
-    active: false,
+    y: 20,
+    h: 50,
+    w: 300,
+    active: true,
   })
 
   const changeFile = (event: Event): void => {
@@ -27,7 +26,7 @@
     }
   }
 
-  const print = (val) => {
+  const print = (val: any) => {
     console.log(val)
   }
 </script>
@@ -49,12 +48,9 @@
         <div class="upload-pdf__pdf">
           <div class="upload-pdf__pdf-vdr">
             <VueDraggableResizable
-              :initW="110"
-              :initH="120"
-              v-model:x="resizable.x"
+              :initW="300"
+              :initH="50"
               v-model:y="resizable.y"
-              v-model:w="resizable.w"
-              v-model:h="resizable.h"
               v-model:active="resizable.active"
               :draggable="true"
               :resizable="true"
@@ -115,13 +111,22 @@
       height: 100%;
       position: relative;
       &-vdr {
-        width: 200px;
-        height: 200px;
         position: absolute;
         top: 0px;
-        left: 0px;
-        border: 1px solid #000;
+        left: 50%;
+        transform: translateX(-50%);
         user-select: none;
+        z-index: 9;
+        &:deep() {
+          .vdr-container {
+            transform: translateX(-50%);
+            color: var(--on-1);
+            font-size: 20px;
+            font-style: normal;
+            font-weight: 400;
+            line-height: normal;
+          }
+        }
       }
       &:deep() {
         .vue-pdf-embed {
