@@ -1,0 +1,16 @@
+@use 'sass:math';
+@import 'base/mixins';
+
+$minWidth: 280;
+
+$maxWidth: 1920;
+$maxWidthContainer: 1440;
+$containerPadding: 32;
+
+$containerWidth: $maxWidthContainer + $containerPadding;
+
+$pc: em($containerWidth);
+$laptop: em(1279.98);
+$table: em(991.98);
+$mobile: em(768.98);
+$mobileSmall: em(479.98);

@@ -1,0 +1,27 @@
+@use 'sass:math';
+
+@import 'base/mixins';
+
+@import 'fonts';
+
+$fontSize: rem(14);
+$fontFamily: Inter;
+
+$mainColor: var(--primary);
+
+@import 'base/null';
+@import 'base/variables';
+
+[class*='__container'] {
+  @if ($maxWidthContainer > 0) {
+    max-width: rem($maxWidthContainer);
+    box-sizing: content-box;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  @if ($containerPadding > 0) {
+    padding-left: rem(math.div($containerPadding, 2));
+    padding-right: rem(math.div($containerPadding, 2));
+  }
+}
