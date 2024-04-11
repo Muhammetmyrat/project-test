@@ -9,8 +9,20 @@
       <div class="header__logo">
         <NuxtLink to="/">Project test</NuxtLink>
       </div>
+      <div class="header__menus">
+        <nav>
+          <ul>
+            <li>
+              <NuxtLink to="/">Home</NuxtLink>
+            </li>
+            <li>
+              <NuxtLink to="/info">Infos</NuxtLink>
+            </li>
+          </ul>
+        </nav>
+      </div>
       <div class="header__search">
-        <the-search :prependIcon="`search`" :placeholder="`Search`"></the-search>
+        <TheSearch :prependIcon="`search`" :placeholder="`Search`" />
       </div>
     </div>
   </header>
@@ -48,6 +60,28 @@
       font-style: normal;
       font-weight: 400;
       line-height: normal;
+    }
+    &__menus {
+      nav {
+        ul {
+          display: flex;
+          gap: 20px;
+          li {
+            list-style: none;
+            a {
+              font-size: 18px;
+              font-style: normal;
+              font-weight: 400;
+              line-height: normal;
+              color: var(--on-3);
+              &.router-link-active,
+              &.router-link-exact-active {
+                color: var(--bg-inverted);
+              }
+            }
+          }
+        }
+      }
     }
   }
 </style>
