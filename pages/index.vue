@@ -1,33 +1,39 @@
 <script setup lang="ts">
   const { $VuePdfEmbed: VuePdfEmbed, $VueDraggableResizable: VueDraggableResizable, $DraggableContainer: DraggableContainer } = useNuxtApp()
   import MyButton from '@/components/base/MyButton.vue'
-  import TextField from '@/components/base/TextField.vue'
 
   //   const pdfSource = computed(() => {
   //     return new URL(`../assets/files/1 page document example.pdf`, import.meta.url).href
   //   })
 
-  const info = ref<string>('')
-  const pdfSource = ref<string | null>('')
-  const resizable = reactive({
-    y: 20,
-    h: 50,
-    w: 300,
-    active: true,
-  })
+  const pdfSource = ref<string>('')
+  const modifyInfos = ref<any>([])
+  const page = ref<number>(1)
+  const pageCount = ref<number>(0)
 
   const changeFile = (event: Event): void => {
     const target = event.target as HTMLInputElement
-    if (target.files) {
-      const blob = URL.createObjectURL(target.files[0])
-      if (blob) {
-        pdfSource.value = blob
-      }
-    }
+    if (target && target.files?.length) pdfSource.value = URL.createObjectURL(target.files[0])
   }
 
-  const print = (val: any) => {
-    console.log(val)
+  const handleDocumentLoad = ({ numPages }: any) => {
+    pageCount.value = numPages
+  }
+
+  const modifyPdf = async () => {
+    modifyInfos.value.push({
+      id: Date.now(),
+      text: '',
+      resizable: {
+        y: 20,
+        initW: 300,
+        initH: 50,
+        active: true,
+      },
+    })
+  }
+  const modifyPdfSlice = () => {
+    modifyInfos.value.pop()
   }
 </script>
 
@@ -40,35 +46,25 @@
       </div>
       <div class="upload-pdf__body" v-if="pdfSource">
         <div class="upload-pdf__textarea">
-          <div class="upload-pdf__input">
-            <TextField v-model="info" />
-          </div>
-          <MyButton title="save" hover />
+          <MyButton title="Add text" hover @click="modifyPdf" />
+          <MyButton v-if="modifyInfos.length" background="var(--warning)" title-color="clear" title="Delete text" @click="modifyPdfSlice" />
         </div>
         <div class="upload-pdf__pdf">
-          <div class="upload-pdf__pdf-vdr">
-            <VueDraggableResizable
-              :initW="300"
-              :initH="50"
-              v-model:y="resizable.y"
-              v-model:active="resizable.active"
-              :draggable="true"
-              :resizable="true"
-              @activated="print('activated')"
-              @deactivated="print('deactivated')"
-              @drag-start="print('drag-start')"
-              @resize-start="print('resize-start')"
-              @dragging="print('dragging')"
-              @resizing="print('resizing')"
-              @drag-end="print('drag-end')"
-              @resize-end="print('resize-end')"
-            >
-              This is a test example
-            </VueDraggableResizable>
+          <div class="upload-pdf__header">
+            <div class="upload-pdf__header-actions">
+              <button :disabled="page <= 1" @click="page--">❮</button>
+              {{ page }} / {{ pageCount }}
+              <button :disabled="page >= pageCount" @click="page++">❯</button>
+            </div>
           </div>
-          <ClientOnly>
-            <VuePdfEmbed annotation-layer text-layer :source="pdfSource" />
-          </ClientOnly>
+          <div class="upload-pdf__pdf-vdr">
+            <template v-for="modifyInfo in modifyInfos" :key="modifyInfo.id">
+              <VueDraggableResizable :initW="modifyInfo.resizable.initW" :initH="modifyInfo.resizable.initH" v-model:y="modifyInfo.resizable.y" v-model:active="modifyInfo.resizable.active" :draggable="true" :resizable="true">
+                <textarea v-model="modifyInfo.text" placeholder="text"></textarea>
+              </VueDraggableResizable>
+            </template>
+          </div>
+          <VuePdfEmbed annotation-layer text-layer :page="page" @loaded="handleDocumentLoad" :source="pdfSource" />
         </div>
       </div>
     </div>
@@ -120,21 +116,42 @@
         &:deep() {
           .vdr-container {
             transform: translateX(-50%);
-            color: var(--on-1);
-            font-size: 20px;
-            font-style: normal;
-            font-weight: 400;
-            line-height: normal;
+            textarea {
+              width: 100%;
+              height: 100%;
+              resize: none;
+              background: transparent;
+              text-transform: none;
+              color: var(--on-1);
+              font-size: 22px;
+              font-style: normal;
+              font-weight: 500;
+              line-height: normal;
+              padding: 5px;
+              &::placeholder {
+                color: var(--on-4);
+              }
+              &::-webkit-scrollbar {
+                width: 8px;
+                height: 8px;
+              }
+
+              &::-webkit-scrollbar-track {
+                background: var(--bg);
+                border-radius: 5px;
+                padding: 2px;
+              }
+
+              &::-webkit-scrollbar-thumb {
+                background: var(--on-1);
+                border-radius: 5px;
+                border: 2px solid var(--bg);
+              }
+            }
           }
         }
       }
       &:deep() {
-        .vue-pdf-embed {
-          margin: 0 auto;
-          display: flex;
-          flex-direction: column;
-          gap: 20px;
-        }
         .vue-pdf-embed__page {
           width: 70% !important;
           margin: 0 auto !important;
@@ -143,6 +160,22 @@
           canvas {
             width: 100% !important;
           }
+        }
+      }
+    }
+    &__header {
+      width: 70%;
+      margin: 0 auto;
+      padding: 20px;
+      &-actions {
+        button {
+          border-radius: 10px;
+          padding: 10px;
+          color: var(--on-1);
+          font-size: 10px;
+          font-style: normal;
+          font-weight: 400;
+          line-height: normal;
         }
       }
     }
