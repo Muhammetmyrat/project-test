@@ -1,8 +1,6 @@
 <script setup lang="ts">
   import MyButton from '@/components/base/MyButton.vue'
-  import { PDFDocument, StandardFonts } from 'pdf-lib'
-  import download from 'downloadjs'
-  const { $VuePdfEmbed: VuePdfEmbed, $VueDraggableResizable: VueDraggableResizable, $DraggableContainer: DraggableContainer } = useNuxtApp()
+  const { $VuePdfEmbed: VuePdfEmbed, $VueDraggableResizable: VueDraggableResizable, $PDFDocument: PDFDocument, $StandardFonts: StandardFonts, $download: download } = useNuxtApp()
 
   const pdfSource = ref<string>('')
   const modifyInfos = ref<any>([])
@@ -75,7 +73,7 @@
 
     const pdfBytes = await pdfDoc.save()
 
-    download(pdfBytes, 'user.pdf', 'application/pdf')
+    download(pdfBytes, `user-${Date.now()}.pdf`, 'application/pdf')
   }
 </script>
 
