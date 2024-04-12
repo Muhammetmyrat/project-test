@@ -1,19 +1,29 @@
 <script setup lang="ts">
-  const { $VuePdfEmbed: VuePdfEmbed, $VueDraggableResizable: VueDraggableResizable, $DraggableContainer: DraggableContainer } = useNuxtApp()
   import MyButton from '@/components/base/MyButton.vue'
-
-  //   const pdfSource = computed(() => {
-  //     return new URL(`../assets/files/1 page document example.pdf`, import.meta.url).href
-  //   })
+  import { PDFDocument, StandardFonts } from 'pdf-lib'
+  import download from 'downloadjs'
+  const { $VuePdfEmbed: VuePdfEmbed, $VueDraggableResizable: VueDraggableResizable, $DraggableContainer: DraggableContainer } = useNuxtApp()
 
   const pdfSource = ref<string>('')
   const modifyInfos = ref<any>([])
   const page = ref<number>(1)
   const pageCount = ref<number>(0)
+  const vuePdfEmbed = ref<any>(null)
+  const fileWidth = ref<number>(0)
+  const fileHeight = ref<number>(0)
 
-  const changeFile = (event: Event): void => {
+  const changeFile = async (event: Event) => {
     const target = event.target as HTMLInputElement
-    if (target && target.files?.length) pdfSource.value = URL.createObjectURL(target.files[0])
+    if (target && target.files?.length) {
+      const blobUrl = URL.createObjectURL(target.files[0])
+      const existingPdfBytes = await fetch(blobUrl).then((res) => res.arrayBuffer())
+      const pdfDoc = await PDFDocument.load(existingPdfBytes)
+      const pages = pdfDoc.getPages()
+      const { width, height } = pages[0].getSize()
+      fileWidth.value = width
+      fileHeight.value = height
+      pdfSource.value = blobUrl
+    }
   }
 
   const handleDocumentLoad = ({ numPages }: any) => {
@@ -22,18 +32,50 @@
 
   const modifyPdf = async () => {
     modifyInfos.value.push({
-      id: Date.now(),
       text: '',
       resizable: {
         y: 20,
+        x: 0,
         initW: 300,
-        initH: 50,
+        initH: 40,
         active: true,
       },
     })
   }
   const modifyPdfSlice = () => {
     modifyInfos.value.pop()
+  }
+  const downloadPdf = async () => {
+    const existingPdfBytes = await fetch(pdfSource.value).then((res) => res.arrayBuffer())
+
+    const pdfDoc = await PDFDocument.load(existingPdfBytes)
+
+    const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica)
+
+    const pages = pdfDoc.getPages()
+
+    modifyInfos.value.forEach((modifyInfo: any) => {
+      const { height } = pages[0].getSize()
+      if (modifyInfo.resizable.y > height) {
+        pages[Math.ceil(Number(modifyInfo.resizable.y / height)) - 1].drawText(modifyInfo.text, {
+          x: modifyInfo.resizable.x,
+          y: Number(modifyInfo.resizable.y - height) - 8,
+          size: 20,
+          font: helveticaFont,
+        })
+      } else {
+        pages[0].drawText(modifyInfo.text, {
+          x: modifyInfo.resizable.x,
+          y: Number(height - modifyInfo.resizable.y) - 20,
+          size: 20,
+          font: helveticaFont,
+        })
+      }
+    })
+
+    const pdfBytes = await pdfDoc.save()
+
+    download(pdfBytes, 'user.pdf', 'application/pdf')
   }
 </script>
 
@@ -50,21 +92,33 @@
           <MyButton v-if="modifyInfos.length" background="var(--warning)" title-color="clear" title="Delete text" @click="modifyPdfSlice" />
         </div>
         <div class="upload-pdf__pdf">
-          <div class="upload-pdf__header">
-            <div class="upload-pdf__header-actions">
+          <div class="upload-pdf__header" :style="{ width: `${fileWidth}px` }">
+            <!-- <div class="upload-pdf__header-actions">
               <button :disabled="page <= 1" @click="page--">❮</button>
               {{ page }} / {{ pageCount }}
               <button :disabled="page >= pageCount" @click="page++">❯</button>
+            </div> -->
+            <div class="upload-pdf__header-download">
+              <MyButton title="Download PDF" active @click="downloadPdf" />
             </div>
           </div>
           <div class="upload-pdf__pdf-vdr">
-            <template v-for="modifyInfo in modifyInfos" :key="modifyInfo.id">
-              <VueDraggableResizable :initW="modifyInfo.resizable.initW" :initH="modifyInfo.resizable.initH" v-model:y="modifyInfo.resizable.y" v-model:active="modifyInfo.resizable.active" :draggable="true" :resizable="true">
+            <template v-for="(modifyInfo, index) in modifyInfos" :key="index">
+              <VueDraggableResizable
+                :parent="true"
+                :initW="modifyInfo.resizable.initW"
+                :initH="modifyInfo.resizable.initH"
+                v-model:y="modifyInfo.resizable.y"
+                v-model:x="modifyInfo.resizable.x"
+                v-model:active="modifyInfo.resizable.active"
+                :draggable="true"
+                :resizable="true"
+              >
                 <textarea v-model="modifyInfo.text" placeholder="text"></textarea>
               </VueDraggableResizable>
             </template>
+            <VuePdfEmbed ref="vuePdfEmbed" :height="fileHeight" :width="fileWidth" :source="pdfSource" annotation-layer text-layer />
           </div>
-          <VuePdfEmbed annotation-layer text-layer :page="page" @loaded="handleDocumentLoad" :source="pdfSource" />
         </div>
       </div>
     </div>
@@ -105,17 +159,15 @@
     &__pdf {
       width: 100%;
       height: 100%;
-      position: relative;
       &-vdr {
-        position: absolute;
-        top: 0px;
-        left: 50%;
-        transform: translateX(-50%);
-        user-select: none;
-        z-index: 9;
+        position: relative;
+        width: max-content;
+        height: 100%;
+        margin: 0 auto;
         &:deep() {
           .vdr-container {
-            transform: translateX(-50%);
+            user-select: none;
+            z-index: 9;
             textarea {
               width: 100%;
               height: 100%;
@@ -123,9 +175,9 @@
               background: transparent;
               text-transform: none;
               color: var(--on-1);
-              font-size: 22px;
+              font-size: 18px;
               font-style: normal;
-              font-weight: 500;
+              font-weight: 400;
               line-height: normal;
               padding: 5px;
               &::placeholder {
@@ -149,24 +201,19 @@
               }
             }
           }
-        }
-      }
-      &:deep() {
-        .vue-pdf-embed__page {
-          width: 70% !important;
-          margin: 0 auto !important;
-          margin-bottom: 8px;
-          box-shadow: 0 2px 8px 4px rgba(0, 0, 0, 0.1);
-          canvas {
-            width: 100% !important;
+          .vue-pdf-embed__page {
+            margin-bottom: 8px;
+            box-shadow: 4px 2px 8px 4px rgba(0, 0, 0, 0.1);
           }
         }
       }
     }
     &__header {
-      width: 70%;
       margin: 0 auto;
-      padding: 20px;
+      padding: 20px 0px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
       &-actions {
         button {
           border-radius: 10px;
