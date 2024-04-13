@@ -7,10 +7,13 @@
   import MyButton from '@/components/base/MyButton.vue'
   import PopUpConfirm from '@/components/popup/PopUpConfirm.vue'
   import PopUpPdfEdit from '@/components/popup/PopUpPdfEdit.vue'
+  import { useToast } from '@/stores/toast'
 
   import { transformDate } from '@/helpers/transformDate'
 
   const { $PDFDocument: PDFDocument } = useNuxtApp()
+
+  const toast = useToast()
 
   interface PdfInfo {
     id: string
@@ -36,43 +39,64 @@
   const fileHeight = ref<number>(0)
 
   const selectAction = async (data: PdfInfo, action: string) => {
-    const existingPdfBytes = await fetch(data.file).then((res) => res.arrayBuffer())
-    const pdfDoc = await PDFDocument.load(existingPdfBytes)
-    const pdfBytes = await pdfDoc.save()
-    const blobUrl = URL.createObjectURL(new Blob([pdfBytes], { type: 'application/pdf' }))
-    const pages = pdfDoc.getPages()
-    const { width, height } = pages[0].getSize()
+    try {
+      const existingPdfBytes = await fetch(data.file).then((res) => res.arrayBuffer())
+      const pdfDoc = await PDFDocument.load(existingPdfBytes)
+      const pdfBytes = await pdfDoc.save()
+      const blobUrl = URL.createObjectURL(new Blob([pdfBytes], { type: 'application/pdf' }))
+      const pages = pdfDoc.getPages()
+      const { width, height } = pages[0].getSize()
 
-    selectedId.value = data.id
+      selectedId.value = data.id
 
-    switch (action) {
-      case 'edit': {
-        fileWidth.value = width
-        fileHeight.value = height
-        pdfSource.value = blobUrl
-        filePages.value = pages.length
-        isEdit.value = true
-        break
+      switch (action) {
+        case 'edit': {
+          fileWidth.value = width
+          fileHeight.value = height
+          pdfSource.value = blobUrl
+          filePages.value = pages.length
+          isEdit.value = true
+          break
+        }
+        case 'show': {
+          window.open(blobUrl, '_blank')
+          break
+        }
+        case 'delete': {
+          isDelete.value = true
+          break
+        }
       }
-      case 'show': {
-        window.open(blobUrl, '_blank')
-        break
-      }
-      case 'delete': {
-        isDelete.value = true
-        break
-      }
+    } catch (error) {
+      console.error('Error selecting action:', error)
+      toast.addToast({
+        text: 'An error occurred while selecting your action',
+        title: 'Error',
+        status: 'error',
+      })
     }
   }
 
   const confirm = () => {
-    const usersInfos: any[] = JSON.parse(localStorage.getItem('usersInfos') || '[]')
-    const usersInfosSlice = usersInfos.filter((info: PdfInfo) => info.id !== selectedId.value) || []
-    pdfInfos.value = usersInfosSlice
-    localStorage.setItem('usersInfos', JSON.stringify(usersInfosSlice))
-    close()
+    try {
+      const usersInfos: PdfInfo[] = JSON.parse(localStorage.getItem('usersInfos') || '[]')
+      const updatedInfos = usersInfos.filter((info: PdfInfo) => info.id !== selectedId.value) || []
+      pdfInfos.value = updatedInfos
+      localStorage.setItem('usersInfos', JSON.stringify(updatedInfos))
+      toast.addToast({
+        text: 'Successfully deleted PDF!',
+        title: 'PDF Deleted',
+      })
+      closeConfirm()
+    } catch (error) {
+      console.error('Error confirming delete:', error)
+      toast.addToast({
+        text: 'An error occurred while deleting PDF',
+        title: 'Error',
+        status: 'error',
+      })
+    }
   }
-
   const closeConfirm = () => {
     isDelete.value = false
     selectedId.value = null
