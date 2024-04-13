@@ -26,7 +26,7 @@
     onlyIcon: { type: Boolean, default: false },
     loading: { type: Boolean, default: false },
     padding: { type: String, default: '13px 12px' },
-    background: { type: String, default: 'var(--clear)' },
+    background: { type: String, default: 'clear' },
     type: { type: String, default: null },
     width: { type: String, default: null },
     height: { type: String, default: 'max-content' },
@@ -51,7 +51,7 @@
   ])
   const styles = computed(() => {
     let obj = {
-      background: props.background,
+      background: `var(--${props.background})`,
       height: props.height,
     }
     if (props.borderRadius) {
@@ -322,12 +322,12 @@
       &.button_soft {
         background: transparent;
         border-color: transparent;
-        color: var(--caption);
+        color: var(--bg);
       }
       &.button_outline {
         background: transparent;
-        color: var(--caption);
-        border-color: var(--caption);
+        color: var(--bg-inverted);
+        border-color: var(--bg-inverted);
       }
     }
 
@@ -355,10 +355,9 @@
       }
     }
     &.button_outline {
-      background: var(--danger-100);
-      color: var(--danger-600);
-      border-color: var(--danger-600);
-      transition: all 0.3s ease;
+      background: transparent !important;
+      color: var(--bg-inverted) !important;
+      border: 2px solid var(--bg-inverted) !important;
     }
     &.button_no-border {
       background: transparent;

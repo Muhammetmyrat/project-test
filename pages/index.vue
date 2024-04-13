@@ -4,28 +4,57 @@
 
   const pdfSource = ref<string>('')
   const modifyInfos = ref<any>([])
-  const page = ref<number>(1)
-  const pageCount = ref<number>(0)
   const vuePdfEmbed = ref<any>(null)
   const fileWidth = ref<number>(0)
   const fileHeight = ref<number>(0)
 
   const changeFile = async (event: Event) => {
     const target = event.target as HTMLInputElement
+
     if (target && target.files?.length) {
       const blobUrl = URL.createObjectURL(target.files[0])
+
       const existingPdfBytes = await fetch(blobUrl).then((res) => res.arrayBuffer())
       const pdfDoc = await PDFDocument.load(existingPdfBytes)
       const pages = pdfDoc.getPages()
+
       const { width, height } = pages[0].getSize()
+
       fileWidth.value = width
       fileHeight.value = height
       pdfSource.value = blobUrl
-    }
-  }
 
-  const handleDocumentLoad = ({ numPages }: any) => {
-    pageCount.value = numPages
+      const reader = new FileReader()
+      const uniqueLetterId = generateLetterUUID()
+      const usersInfos: any = JSON.parse(localStorage.getItem('usersInfos') as any)
+
+      reader.onload = (event) => {
+        const base64encodedFile = event.target.result
+        if (usersInfos) {
+          usersInfos.push({
+            id: uniqueLetterId,
+            date: new Date(),
+            file: base64encodedFile,
+            fileName: `${target.files[0].name}`,
+          })
+          localStorage.setItem('usersInfos', JSON.stringify(usersInfos))
+        } else {
+          localStorage.setItem(
+            'usersInfos',
+            JSON.stringify([
+              {
+                id: uniqueLetterId,
+                date: new Date(),
+                file: base64encodedFile,
+                fileName: `${target.files[0].name}`,
+              },
+            ])
+          )
+        }
+      }
+
+      reader.readAsDataURL(target.files[0])
+    }
   }
 
   const modifyPdf = async () => {
@@ -40,9 +69,11 @@
       },
     })
   }
+
   const modifyPdfSlice = () => {
     modifyInfos.value.pop()
   }
+
   const generateLetterUUID = () => {
     let uuid = ''
     const letters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
@@ -54,6 +85,7 @@
 
     return uuid
   }
+
   const downloadPdf = async () => {
     const existingPdfBytes = await fetch(pdfSource.value).then((res) => res.arrayBuffer())
 
@@ -84,30 +116,7 @@
 
     const pdfBytes = await pdfDoc.save()
 
-    const uniqueLetterId = generateLetterUUID()
-    const usersInfos: any = JSON.parse(localStorage.getItem('usersInfos') as any)
-
     download(pdfBytes, `user-${uniqueLetterId}.pdf`, 'application/pdf')
-
-    if (usersInfos) {
-      usersInfos.push({
-        id: uniqueLetterId,
-        file: pdfBytes,
-        fileName: `user-${uniqueLetterId}.pdf`,
-      })
-      localStorage.setItem('usersInfos', JSON.stringify(usersInfos))
-    } else {
-      localStorage.setItem(
-        'usersInfos',
-        JSON.stringify([
-          {
-            id: uniqueLetterId,
-            file: pdfBytes,
-            fileName: `user-${uniqueLetterId}.pdf`,
-          },
-        ])
-      )
-    }
   }
 </script>
 
@@ -121,15 +130,10 @@
       <div class="upload-pdf__body" v-if="pdfSource">
         <div class="upload-pdf__textarea">
           <MyButton title="Add text" hover @click="modifyPdf" />
-          <MyButton v-if="modifyInfos.length" background="var(--warning)" title-color="clear" title="Delete text" @click="modifyPdfSlice" />
+          <MyButton v-if="modifyInfos.length" background="warning" title-color="clear" title="Delete text" @click="modifyPdfSlice" />
         </div>
         <div class="upload-pdf__pdf">
           <div class="upload-pdf__header" :style="{ width: `${fileWidth}px` }">
-            <!-- <div class="upload-pdf__header-actions">
-              <button :disabled="page <= 1" @click="page--">❮</button>
-              {{ page }} / {{ pageCount }}
-              <button :disabled="page >= pageCount" @click="page++">❯</button>
-            </div> -->
             <div class="upload-pdf__header-download">
               <MyButton title="Download PDF" active @click="downloadPdf" />
             </div>
@@ -263,9 +267,6 @@
       justify-content: center;
       gap: 40px;
       margin-bottom: 30px;
-    }
-    &__input {
-      width: 50%;
     }
   }
 </style>
