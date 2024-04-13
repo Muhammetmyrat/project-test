@@ -15,6 +15,7 @@
   --blue: #d4e1fbff;
   --red: #fbd4d5ff;
   --green: #e6fbd4ff;
+  --box-shadow: rgba(0, 0, 0, 0.1);
 }
 html[prefers-color-scheme='dark'] {
   --bg-inverted: #fbfbfb;
@@ -33,4 +34,5 @@ html[prefers-color-scheme='dark'] {
   --blue: #213544ff;
   --red: #422323ff;
   --green: #25391eff;
+  --box-shadow: rgba(0, 0, 0, 0.1);
 }

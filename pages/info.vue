@@ -1,4 +1,5 @@
 <script setup lang="ts">
+  import { defineProps, ref, onMounted } from 'vue'
   import MyTable from '@/components/base/Table.vue'
   import MyTableHead from '@/components/base/TableHead.vue'
   import MyTableBody from '@/components/base/TableBody.vue'
@@ -6,7 +7,15 @@
   import MyButton from '@/components/base/MyButton.vue'
 
   import { transformDate } from '@/helpers/transformDate'
-  const { $VuePdfEmbed: VuePdfEmbed, $VueDraggableResizable: VueDraggableResizable, $PDFDocument: PDFDocument, $StandardFonts: StandardFonts, $download: download } = useNuxtApp()
+
+  const { $PDFDocument: PDFDocument } = useNuxtApp()
+
+  interface PdfInfo {
+    id: number
+    fileName: string
+    date: Date | string
+    file: string
+  }
 
   const tableHead = ref([
     { id: 1, name: '№' },
@@ -15,9 +24,9 @@
     { id: 4, name: 'Actions' },
   ])
 
-  const pdfInfos = ref<any>([])
+  const pdfInfos = ref<PdfInfo[]>([])
 
-  const selectAction = async (data, action) => {
+  const selectAction = async (data: PdfInfo, action: string) => {
     const existingPdfBytes = await fetch(data.file).then((res) => res.arrayBuffer())
     const pdfDoc = await PDFDocument.load(existingPdfBytes)
     const pdfBytes = await pdfDoc.save()
@@ -33,11 +42,14 @@
         console.log('Blob URL:', blobUrl)
         break
       }
+      case 'delete': {
+        break
+      }
     }
   }
 
   onMounted(() => {
-    pdfInfos.value = JSON.parse(localStorage.getItem('usersInfos') as any)
+    pdfInfos.value = JSON.parse(localStorage.getItem('usersInfos') || '[]') as PdfInfo[]
   })
 </script>
 
@@ -45,25 +57,25 @@
   <div class="infos">
     <div class="infos__wrapper">
       <div class="infos__body">
-        <my-table v-if="pdfInfos && pdfInfos.length">
-          <my-table-head :items="tableHead" sticky />
-          <my-table-body>
+        <MyTable v-if="pdfInfos && pdfInfos.length">
+          <MyTableHead :items="tableHead" sticky />
+          <MyTableBody>
             <template v-for="(pdfInfo, index) in pdfInfos" :key="pdfInfo.id">
-              <my-table-row>
+              <MyTableRow>
                 <td>{{ index + 1 }}</td>
                 <td>{{ pdfInfo.fileName }}</td>
                 <td>{{ transformDate(pdfInfo.date) }}</td>
                 <td>
                   <div class="infos__actions">
-                    <my-button title="show" @click="selectAction(pdfInfo, 'show')"></my-button>
-                    <my-button title="edit" active @click="selectAction(pdfInfo, 'edit')"></my-button>
-                    <my-button title="delete" background="warning" title-color="clear" @click="selectAction(pdfInfo, 'delete')"></my-button>
+                    <MyButton title="show" @click="selectAction(pdfInfo, 'show')" />
+                    <MyButton title="edit" active @click="selectAction(pdfInfo, 'edit')" />
+                    <MyButton title="delete" background="warning" title-color="clear" @click="selectAction(pdfInfo, 'delete')" />
                   </div>
                 </td>
-              </my-table-row>
+              </MyTableRow>
             </template>
-          </my-table-body>
-        </my-table>
+          </MyTableBody>
+        </MyTable>
       </div>
     </div>
   </div>
@@ -73,16 +85,19 @@
   .infos {
     width: 100%;
     height: 100%;
+
     &__wrapper {
       width: 100%;
       height: 100%;
     }
+
     &__body {
       width: 80%;
       height: 800px;
       margin: 0 auto;
       padding: 60px 0px;
     }
+
     &__actions {
       display: flex;
       align-items: center;
