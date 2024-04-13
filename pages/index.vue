@@ -43,6 +43,17 @@
   const modifyPdfSlice = () => {
     modifyInfos.value.pop()
   }
+  const generateLetterUUID = () => {
+    let uuid = ''
+    const letters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
+
+    for (let i = 0; i < 32; i++) {
+      const index = Math.floor(Math.random() * letters.length)
+      uuid += letters[index]
+    }
+
+    return uuid
+  }
   const downloadPdf = async () => {
     const existingPdfBytes = await fetch(pdfSource.value).then((res) => res.arrayBuffer())
 
@@ -73,7 +84,30 @@
 
     const pdfBytes = await pdfDoc.save()
 
-    download(pdfBytes, `user-${Date.now()}.pdf`, 'application/pdf')
+    const uniqueLetterId = generateLetterUUID()
+    const usersInfos: any = JSON.parse(localStorage.getItem('usersInfos') as any)
+
+    download(pdfBytes, `user-${uniqueLetterId}.pdf`, 'application/pdf')
+
+    if (usersInfos) {
+      usersInfos.push({
+        id: uniqueLetterId,
+        file: pdfBytes,
+        fileName: `user-${uniqueLetterId}.pdf`,
+      })
+      localStorage.setItem('usersInfos', JSON.stringify(usersInfos))
+    } else {
+      localStorage.setItem(
+        'usersInfos',
+        JSON.stringify([
+          {
+            id: uniqueLetterId,
+            file: pdfBytes,
+            fileName: `user-${uniqueLetterId}.pdf`,
+          },
+        ])
+      )
+    }
   }
 </script>
 
@@ -103,7 +137,6 @@
           <div class="upload-pdf__pdf-vdr">
             <template v-for="(modifyInfo, index) in modifyInfos" :key="index">
               <VueDraggableResizable
-                :parent="true"
                 :initW="modifyInfo.resizable.initW"
                 :initH="modifyInfo.resizable.initH"
                 v-model:y="modifyInfo.resizable.y"
