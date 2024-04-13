@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import { defineProps, ref } from 'vue'
+  import { ref } from 'vue'
   import MyButton from '@/components/base/MyButton.vue'
   import { useGenerateUUID } from '@/composables/generateUUID'
   const { $VuePdfEmbed: VuePdfEmbed, $VueDraggableResizable: VueDraggableResizable, $PDFDocument: PDFDocument, $StandardFonts: StandardFonts, $download: download } = useNuxtApp()

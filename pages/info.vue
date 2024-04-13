@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import { defineProps, ref, onMounted } from 'vue'
+  import { ref, onMounted } from 'vue'
   import MyTable from '@/components/base/Table.vue'
   import MyTableHead from '@/components/base/TableHead.vue'
   import MyTableBody from '@/components/base/TableBody.vue'
@@ -11,7 +11,7 @@
   const { $PDFDocument: PDFDocument } = useNuxtApp()
 
   interface PdfInfo {
-    id: number
+    id: string
     fileName: string
     date: Date | string
     file: string
@@ -39,10 +39,14 @@
       }
       case 'show': {
         const blobUrl = URL.createObjectURL(new Blob([pdfBytes], { type: 'application/pdf' }))
-        console.log('Blob URL:', blobUrl)
+        window.open(blobUrl, '_blank')
         break
       }
       case 'delete': {
+        const usersInfos: any[] = JSON.parse(localStorage.getItem('usersInfos') || '[]')
+        const usersInfosNew = usersInfos.filter((info: PdfInfo) => info.id !== data.id) || []
+        pdfInfos.value = usersInfosNew
+        localStorage.setItem('usersInfos', JSON.stringify(usersInfosNew))
         break
       }
     }

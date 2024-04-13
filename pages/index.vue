@@ -8,6 +8,13 @@
 
   const { generateLetterUUID } = useGenerateUUID()
 
+  interface fileInfo {
+    id: string
+    date: Date | string
+    file: string
+    fileName: string
+  }
+
   const pdfSource = ref<string>('')
   const fileWidth = ref<number>(0)
   const fileHeight = ref<number>(0)
@@ -43,7 +50,7 @@
 
   const savePdfToLocalStorage = (file: File, base64encodedFile: string) => {
     const uniqueLetterId = generateLetterUUID()
-    const fileInfo = {
+    const fileInfo: fileInfo = {
       id: uniqueLetterId,
       date: new Date(),
       file: base64encodedFile,
