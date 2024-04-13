@@ -18,6 +18,8 @@
 
 <style lang="scss" scoped>
   .content {
+    width: 100%;
+    height: max-content;
     &__wrapper {
       width: 100%;
       display: flex;
@@ -30,7 +32,7 @@
       width: 100%;
       display: flex;
       align-items: center;
-      justify-content: space-between;
+      justify-content: flex-end;
     }
     &__body {
       width: 100%;

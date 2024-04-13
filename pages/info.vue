@@ -5,6 +5,8 @@
   import MyTableBody from '@/components/base/TableBody.vue'
   import MyTableRow from '@/components/base/TableRow.vue'
   import MyButton from '@/components/base/MyButton.vue'
+  import PopUpConfirm from '@/components/popup/PopUpConfirm.vue'
+  import PopUpPdfEdit from '@/components/popup/PopUpPdfEdit.vue'
 
   import { transformDate } from '@/helpers/transformDate'
 
@@ -25,31 +27,59 @@
   ])
 
   const pdfInfos = ref<PdfInfo[]>([])
+  const isDelete = ref<boolean>(false)
+  const isEdit = ref<boolean>(false)
+  const selectedId = ref<string | null>(null)
+  const pdfSource = ref<string>('')
+  const filePages = ref<number>(0)
+  const fileWidth = ref<number>(0)
+  const fileHeight = ref<number>(0)
 
   const selectAction = async (data: PdfInfo, action: string) => {
     const existingPdfBytes = await fetch(data.file).then((res) => res.arrayBuffer())
     const pdfDoc = await PDFDocument.load(existingPdfBytes)
     const pdfBytes = await pdfDoc.save()
+    const blobUrl = URL.createObjectURL(new Blob([pdfBytes], { type: 'application/pdf' }))
+    const pages = pdfDoc.getPages()
+    const { width, height } = pages[0].getSize()
+
+    selectedId.value = data.id
 
     switch (action) {
       case 'edit': {
-        const pages = pdfDoc.getPages()
-        const { width, height } = pages[0].getSize()
+        fileWidth.value = width
+        fileHeight.value = height
+        pdfSource.value = blobUrl
+        filePages.value = pages.length
+        isEdit.value = true
         break
       }
       case 'show': {
-        const blobUrl = URL.createObjectURL(new Blob([pdfBytes], { type: 'application/pdf' }))
         window.open(blobUrl, '_blank')
         break
       }
       case 'delete': {
-        const usersInfos: any[] = JSON.parse(localStorage.getItem('usersInfos') || '[]')
-        const usersInfosSlice = usersInfos.filter((info: PdfInfo) => info.id !== data.id) || []
-        pdfInfos.value = usersInfosSlice
-        localStorage.setItem('usersInfos', JSON.stringify(usersInfosSlice))
+        isDelete.value = true
         break
       }
     }
+  }
+
+  const confirm = () => {
+    const usersInfos: any[] = JSON.parse(localStorage.getItem('usersInfos') || '[]')
+    const usersInfosSlice = usersInfos.filter((info: PdfInfo) => info.id !== selectedId.value) || []
+    pdfInfos.value = usersInfosSlice
+    localStorage.setItem('usersInfos', JSON.stringify(usersInfosSlice))
+    close()
+  }
+
+  const closeConfirm = () => {
+    isDelete.value = false
+    selectedId.value = null
+  }
+  const closeEdit = () => {
+    isEdit.value = false
+    selectedId.value = null
   }
 
   onMounted(() => {
@@ -82,6 +112,10 @@
         </MyTable>
       </div>
     </div>
+    <Teleport to="body">
+      <pop-up-confirm v-if="isDelete" @close="closeConfirm" @sure="confirm"></pop-up-confirm>
+      <pop-up-pdf-edit v-if="isEdit" @close="closeEdit" :source="pdfSource" :width="fileWidth" :height="fileHeight" :pages="filePages"></pop-up-pdf-edit>
+    </Teleport>
   </div>
 </template>
 
