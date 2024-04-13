@@ -44,9 +44,9 @@
       }
       case 'delete': {
         const usersInfos: any[] = JSON.parse(localStorage.getItem('usersInfos') || '[]')
-        const usersInfosNew = usersInfos.filter((info: PdfInfo) => info.id !== data.id) || []
-        pdfInfos.value = usersInfosNew
-        localStorage.setItem('usersInfos', JSON.stringify(usersInfosNew))
+        const usersInfosSlice = usersInfos.filter((info: PdfInfo) => info.id !== data.id) || []
+        pdfInfos.value = usersInfosSlice
+        localStorage.setItem('usersInfos', JSON.stringify(usersInfosSlice))
         break
       }
     }
