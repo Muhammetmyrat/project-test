@@ -50,6 +50,7 @@
 
   const savePdfToLocalStorage = (file: File, base64encodedFile: string) => {
     const uniqueLetterId = generateLetterUUID()
+
     const fileInfo: fileInfo = {
       id: uniqueLetterId,
       date: new Date(),

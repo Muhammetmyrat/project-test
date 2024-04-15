@@ -26,6 +26,7 @@
     emits('close')
   }
 </script>
+
 <template>
   <pop-up-body :active="true" :popUpWidth="`${width + 200}`" @close="close">
     <div class="pdf-edit" :style="{ height: `${Number(height * pages) + 200}px` }">
