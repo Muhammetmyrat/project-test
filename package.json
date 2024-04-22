@@ -16,7 +16,6 @@
   "dependencies": {
     "@pinia/nuxt": "^0.5.1",
     "downloadjs": "^1.4.7",
-    "jspdf": "^2.5.1",
     "nuxt": "^3.11.2",
     "pdf-lib": "^1.17.1",
     "pinia": "^2.1.7",

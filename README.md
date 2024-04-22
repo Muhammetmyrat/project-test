@@ -74,4 +74,18 @@ bun run preview
 
 Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
 
-# project-test
+# Running project with Docker
+
+Before you begin, ensure you have the following installed:
+
+- Docker: [https://www.docker.com/get-started](https://www.docker.com/get-started)
+
+## Getting Started
+
+# Build Docker Image: Run the following command to build the Docker image:
+
+docker build -t project-test .
+
+# Run Docker Container: Once the image is built, start the Docker container:
+
+docker run -p 8080:8080 project-test

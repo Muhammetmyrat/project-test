@@ -59,7 +59,9 @@
     const pages = pdfDoc.getPages()
 
     modifyInfos.value.forEach((modifyInfo) => {
+
       const { height } = pages[0].getSize()
+      
       const offsetY = modifyInfo.resizable.y > height ? modifyInfo.resizable.y - height - 8 : height - modifyInfo.resizable.y - 20
       const offsetX = modifyInfo.resizable.x + 5
 
